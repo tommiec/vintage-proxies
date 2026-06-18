@@ -15,6 +15,10 @@ is opportunistic compatibility, not a secure TLS solution.
 A later VPN layer (gluetun → ProtonVPN) is deliberately not yet included; see the
 [Future: VPN Layer](#future-vpn-layer) section at the bottom.
 
+## Screenshots
+
+![Aquafox on the iMac G3 loading the Wikipedia iMac G3 article via Macproxy](assets/screenshot.jpg)
+
 ## Choice
 
 Finding on the G3: pages load faster with Macproxy than with WebOne. Hence this order.
@@ -46,22 +50,35 @@ Host ports are configurable via `.env`.
    `carl` is compiled from source on first start; allow a few minutes for the build.
 3. Configure the browser's proxy to the host IP and the relevant port (see [Ports](#ports)).
 
+## Portainer CE
+
+Portainer CE cannot use the local `build:` flow for `cryanc/carl`, so the Portainer
+stack uses the GitHub Actions image instead:
+
+```text
+ghcr.io/tommiec/cryanc-carl:latest
+```
+
+See [deploy/](deploy/) for a pre-built-images stack and `.env` template. The real
+deployment journal can still live in a separate GitOps repository.
+
 ## Browser Configuration on the iMac
 
 Use the proxy as the browser's proxy setting. Do not surf to the proxy as if it were a
 website. WebOne may then show a "looped connection" page; that only means WebOne is
 reachable.
 
-In this setup, `NAS-IP` is currently `192.168.30.2`.
+Replace `<NAS-IP>` in the steps below with the IP address or hostname of the machine
+running this stack (e.g. `192.168.1.10`).
 
 ### Aquafox on Tiger
 
 1. Open Aquafox → Preferences → Advanced → Network → Settings.
 2. Choose **Manual proxy configuration**.
-3. Set **HTTP Proxy** to `192.168.30.2`, port `5003`.
-4. Set **SSL Proxy** also to `192.168.30.2`, port `5003`, or use the option
+3. Set **HTTP Proxy** to `<NAS-IP>`, port `5003`.
+4. Set **SSL Proxy** also to `<NAS-IP>`, port `5003`, or use the option
    "Use this proxy server for all protocols" if it is visible in your build.
-5. Under **No Proxy for**, set at least `localhost, 127.0.0.1, 192.168.30.2`.
+5. Under **No Proxy for**, set at least `localhost, 127.0.0.1, <NAS-IP>`.
 6. Test with `http://frogfind.com/` or `https://example.com/`.
 
 Use WebOne as a fallback by temporarily setting the same fields to port `8091`. Do not
@@ -72,10 +89,10 @@ use `carl` in Aquafox.
 Safari uses the OS X network settings:
 
 1. System Preferences → Network → active interface (Ethernet) → **Proxies** tab.
-2. Check **Web Proxy (HTTP)** and set server `192.168.30.2`, port `5003` for Macproxy,
+2. Check **Web Proxy (HTTP)** and set server `<NAS-IP>`, port `5003` for Macproxy,
    or `8091` for WebOne.
 3. Check **Secure Web Proxy (HTTPS)** too with the same server and port.
-4. Under bypass/exceptions, set at least `192.168.30.2`.
+4. Under bypass/exceptions, set at least `<NAS-IP>`.
 5. Save/apply and surf to a normal site, not to the proxy itself.
 
 For Safari use the same port choice: Macproxy `5003`, WebOne `8091`. Do not use `carl`
@@ -87,12 +104,13 @@ Use this matrix only after Ethernet, DHCP, gateway, and DNS on the iMac G3 are
 confirmed. For each test, note briefly: `works`, `partial`, `fails`, plus what you saw
 (load time, layout, images, forms, error message).
 
-Network basics: iMac `192.168.40.90`, NAS/proxy `192.168.30.2`. Cross-VLAN traffic works
-with UDM rules for outbound and return traffic; see `docs/05-networking-and-wifi.md`.
+Network basics: replace `<IMAC-IP>` and `<NAS-IP>` with your actual addresses.
+If the iMac and the proxy host are on different VLANs, ensure your router allows
+cross-VLAN traffic between them.
 
 | Test | Aquafox via Macproxy | Aquafox via WebOne | Safari via Macproxy | Safari via WebOne | OS 9/Classilla via carl | Notes |
 |------|----------------------|--------------------|---------------------|-------------------|-------------------------|----------|
-| Proxy reachable (direct `http://192.168.30.2:8091/`) | n/a | | n/a | | n/a | "Looped connection" = WebOne is reachable. |
+| Proxy reachable (direct `http://<NAS-IP>:8091/`) | n/a | | n/a | | n/a | "Looped connection" = WebOne is reachable. |
 | `http://example.com/` | | | | | | Plain HTTP basic test. |
 | `https://example.com/` | | | | | | HTTPS/TLS basic test via proxy. |
 | `https://frogfind.com/` | | | | | | Retro-friendly search/start page. |
@@ -147,13 +165,13 @@ This means:
 Check the port is open:
 
 ```sh
-nc -z 192.168.30.2 8767 && echo "open"
+nc -z <NAS-IP> 8767 && echo "open"
 ```
 
 Test plain HTTP (not HTTPS) through carl:
 
 ```sh
-curl --proxy http://192.168.30.2:8767 http://neverssl.com/
+curl --proxy http://<NAS-IP>:8767 http://neverssl.com/
 ```
 
 HTTPS through carl cannot be tested from a modern client — that requires a
