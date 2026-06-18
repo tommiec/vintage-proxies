@@ -29,6 +29,10 @@ ghcr.io/tommiec/cryanc-carl:latest
 3. Configure the browser's proxy to `<NAS-IP>` and the relevant port (see the root
    [README](../README.md#ports)).
 
+Optional: to use the included AdGuard Home service as DNS on the G3, set
+`ADGUARD_DNS_PORT=53`, complete the setup wizard, then set the G3's DNS server to
+`<NAS-IP>`. See the root [README](../README.md#adguard-home-dns-on-the-g3).
+
 ## Updating cryanc
 
 1. Edit `cryanc/Dockerfile` in this repo and push to `main`.

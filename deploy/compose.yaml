@@ -1,4 +1,27 @@
 services:
+  adguard:
+    image: adguard/adguardhome:latest
+    container_name: ${ADGUARD_CONTAINER_NAME:-adguard-home}
+    restart: unless-stopped
+    env_file:
+      - .env
+    ports:
+      # Set ADGUARD_DNS_PORT=53 in .env to use as DNS on the G3 (standard port).
+      # Default 5353 avoids colliding with any host-level DNS service.
+      - "${ADGUARD_DNS_PORT:-5353}:53/tcp"
+      - "${ADGUARD_DNS_PORT:-5353}:53/udp"
+      - "${ADGUARD_SETUP_PORT:-3000}:3000/tcp"
+      - "${ADGUARD_WEB_PORT:-3001}:80/tcp"
+    volumes:
+      - adguard_work:/opt/adguardhome/work
+      - adguard_conf:/opt/adguardhome/conf
+    security_opt:
+      - no-new-privileges:true
+    labels:
+      - com.centurylinklabs.watchtower.enable=true
+    networks:
+      - proxynet
+
   webone:
     image: u306060/webone:latest
     container_name: webone
@@ -58,3 +81,7 @@ networks:
   proxynet:
     name: proxynet
     driver: bridge
+
+volumes:
+  adguard_work:
+  adguard_conf:

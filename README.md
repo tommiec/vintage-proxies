@@ -1,12 +1,14 @@
 # Proxy Stack for the iMac G3
 
-Three-service Docker Compose stack providing legacy web access for the iMac G3.
+Docker Compose stack providing legacy web access for the iMac G3.
 
 - **Macproxy** — primary choice on Tiger/Aquafox; fast, plain HTML, upstream certificate
   validation.
 - **WebOne** — fallback when you want more layout/images; richer but slower.
 - **Crypto Ancienne (`carl`)** — only for OS 9/Classilla special cases; no certificate
   validation.
+- **AdGuard Home** — standalone DNS blocker; optional for the G3 and independent of the
+  browser proxy choice.
 
 No sensitive logins or banking through this machine. Macproxy/WebOne validate upstream
 certificates, but between the iMac and the NAS the traffic is local proxy traffic. `carl`
@@ -33,6 +35,9 @@ Finding on the G3: pages load faster with Macproxy than with WebOne. Hence this 
 | Macproxy | `5003` | `5001` |
 | WebOne   | `8091` | `8080` |
 | carl     | `8767` | `8765` |
+| AdGuard Home DNS   | `5353` (set `53` in `.env` for G3 use) | `53` |
+| AdGuard Home setup | `3000` | `3000` |
+| AdGuard Home admin | `3001` | `80` |
 
 Host ports are configurable via `.env`.
 
@@ -46,6 +51,7 @@ Host ports are configurable via `.env`.
    ```
    `carl` is compiled from source on first start; allow a few minutes for the build.
 3. Configure the browser's proxy to the host IP and the relevant port (see [Ports](#ports)).
+4. Optional: use [AdGuard Home DNS](#adguard-home-dns-on-the-g3) for G3-wide DNS blocking.
 
 ## Portainer CE
 
@@ -95,6 +101,23 @@ Safari uses the OS X network settings:
 For Safari use the same port choice: Macproxy `5003`, WebOne `8091`. Do not use `carl`
 for Safari/Aquafox.
 
+## AdGuard Home DNS on the G3
+
+AdGuard Home is included as a standalone DNS service. It is not wired into the proxy
+containers: proxy choice stays in the browser, DNS choice stays in OS X Network settings.
+
+To use it from the G3:
+
+1. Set `ADGUARD_DNS_PORT=53` in `.env` before starting the stack. Standard DNS clients
+   use port `53`; the default `5353` is only a collision-safe startup value.
+2. Start the stack and finish the setup wizard at `http://<NAS-IP>:3000/`.
+3. In the wizard, keep DNS listening on internal port `53`. Use internal port `80` for
+   the admin UI if you want to reach it at `http://<NAS-IP>:3001/` after setup.
+4. On Tiger: System Preferences → Network → active interface → **DNS** tab. Add
+   `<NAS-IP>` as the DNS server.
+
+This filters DNS for all G3 traffic. It does not change which proxy the browser uses.
+
 ## Test Matrix
 
 Use this matrix only after Ethernet, DHCP, gateway, and DNS on the iMac G3 are
@@ -136,11 +159,6 @@ the G3.
   to skip transcoding per site. Functionally in the same category as Macproxy/WebOne, but
   a Node/Yarn build rather than a ready-made Docker image, so it would need its own
   container and a G3 test before adoption. BSD-3-Clause.
-
-Adjacent browsing extras:
-
-- **AdGuard Home** DNS adblocking is a useful later browsing improvement for Aquafox/Tiger,
-  but it belongs beside the NAS/browser route rather than inside this three-proxy stack.
 
 ## carl / cryanc — protocol notes
 
