@@ -38,11 +38,21 @@ Host ports are configurable via `.env`.
 
 ## Usage
 
+### Portainer CE (production)
+
+Deployment is managed from the `portainer-stacks` repository. The cryanc
+image is pre-built and published to `ghcr.io/tommiec/cryanc-carl:latest` by
+GitHub Actions; no local build step needed.
+
+See `portainer-stacks/stacks/vintage-proxy/` for the compose, env template,
+and setup instructions.
+
+### Local / Container Manager (development)
+
 1. Copy `.env.example` to `.env` and fill in at least `WEBONE_HOSTNAME`
-   (the LAN IP or hostname of your Synology).
+   (the LAN IP or hostname of the NAS).
 2. In Container Manager, create a new project pointing to this folder.
-   carl is built locally from source, so the `cryanc/` folder with the `Dockerfile`
-   must be present.
+   `carl` is built from `cryanc/Dockerfile` at project start.
 3. Build & start the project.
 
 ## Browser Configuration on the iMac
