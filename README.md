@@ -129,9 +129,41 @@ the G3.
   free, no account needed, nothing to self-host. A good period-accurate complement to the
   live-web proxies above.
 
+## carl / cryanc — protocol notes
+
+Carl is **not** a standard HTTP CONNECT proxy. It uses a socat/inetd model:
+each incoming TCP connection forks a `carl` process that reads a raw HTTP
+request from stdin and writes the response to stdout. Carl handles the TLS
+negotiation to the upstream server on behalf of the client.
+
+This means:
+
+- **Classilla / OS 9**: sends a full `GET http://example.com/ HTTP/1.0` to the
+  proxy — exactly what carl expects. TLS is transparent to the browser.
+- **Modern browsers** (Safari, Firefox, curl with HTTPS): send `CONNECT
+  example.com:443 HTTP/1.1` — carl does not understand CONNECT and exits with
+  status 1. Socat logs `child exited with status 1`. **This is expected.**
+
+### Verifying carl from a modern machine
+
+Check the port is open:
+
+```sh
+nc -z 192.168.30.2 8767 && echo "open"
+```
+
+Test plain HTTP (not HTTPS) through carl:
+
+```sh
+curl --proxy http://192.168.30.2:8767 http://neverssl.com/
+```
+
+HTTPS through carl cannot be tested from a modern client — that requires a
+browser like Classilla that does not use CONNECT.
+
 ## Notes
 
-- Use `carl` only for OS 9/Classilla special cases.
+- Use `carl` only for OS 9/Classilla; modern browsers must use Macproxy or WebOne.
 - Do not bind these proxies unprotected to the internet; they have no authentication.
   Keep them on your LAN.
 - WebOne and Macproxy can be updated with `docker compose pull && docker compose up -d`.
