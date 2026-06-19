@@ -30,8 +30,9 @@ ghcr.io/tommiec/cryanc-carl:latest
    [README](../README.md#ports)).
 
 Optional: to use the included AdGuard Home service as DNS on the G3, set
-`ADGUARD_DNS_PORT=53`, complete the setup wizard, then set the G3's DNS server to
-`<NAS-IP>`. See the root [README](../README.md#adguard-home-dns-on-the-g3).
+`ADGUARD_DNS_PORT=53`, complete the setup wizard at `http://<NAS-IP>:3080/`, then
+set the G3's DNS server to `<NAS-IP>`. See the root
+[README](../README.md#adguard-home-dns-on-the-g3).
 
 ## Updating cryanc
 

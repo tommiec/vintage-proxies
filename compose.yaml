@@ -8,7 +8,7 @@ services:
       # Default 5353 avoids colliding with any host-level DNS service.
       - "${ADGUARD_DNS_PORT:-5353}:53/tcp"
       - "${ADGUARD_DNS_PORT:-5353}:53/udp"
-      - "${ADGUARD_SETUP_PORT:-3000}:3000/tcp"
+      - "${ADGUARD_SETUP_PORT:-3080}:3000/tcp"
       - "${ADGUARD_WEB_PORT:-3001}:80/tcp"
     volumes:
       - adguard_work:/opt/adguardhome/work

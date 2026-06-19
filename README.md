@@ -36,7 +36,7 @@ Finding on the G3: pages load faster with Macproxy than with WebOne. Hence this 
 | WebOne   | `8091` | `8080` |
 | carl     | `8767` | `8765` |
 | AdGuard Home DNS   | `5353` (set `53` in `.env` for G3 use) | `53` |
-| AdGuard Home setup | `3000` | `3000` |
+| AdGuard Home setup | `3080` | `3000` |
 | AdGuard Home admin | `3001` | `80` |
 
 Host ports are configurable via `.env`.
@@ -110,7 +110,7 @@ To use it from the G3:
 
 1. Set `ADGUARD_DNS_PORT=53` in `.env` before starting the stack. Standard DNS clients
    use port `53`; the default `5353` is only a collision-safe startup value.
-2. Start the stack and finish the setup wizard at `http://<NAS-IP>:3000/`.
+2. Start the stack and finish the setup wizard at `http://<NAS-IP>:3080/`.
 3. In the wizard, keep DNS listening on internal port `53`. Use internal port `80` for
    the admin UI if you want to reach it at `http://<NAS-IP>:3001/` after setup.
 4. On Tiger: System Preferences → Network → active interface → **DNS** tab. Add
