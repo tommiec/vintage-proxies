@@ -118,6 +118,83 @@ To use it from the G3:
 
 This filters DNS for all G3 traffic. It does not change which proxy the browser uses.
 
+### Post-install: Retro Light filtering
+
+Treat AdGuard Home as a light DNS filter for the G3, not as an aggressive adblock
+setup. The goal is fewer tracker, ad, metrics, and pixel requests while keeping old
+sites usable.
+
+In the setup wizard:
+
+- Keep DNS listening on internal port `53`.
+- Keep the admin UI on internal port `80` so it remains reachable at
+  `http://<NAS-IP>:3001/`.
+- Use your normal LAN resolver or router as upstream DNS. For a NAS in a server VLAN
+  behind a UDM/UniFi gateway, this is usually that VLAN gateway, for example
+  `192.168.30.1`.
+- Use plain DNS upstreams first. DoH/DoT is not needed for this use case.
+
+In **Filters -> DNS blocklists**, start small:
+
+```text
+AdGuard DNS filter
+https://adguardteam.github.io/HostlistsRegistry/assets/filter_1.txt
+
+HaGeZi Multi LIGHT
+https://raw.githubusercontent.com/hagezi/dns-blocklists/main/adblock/light.txt
+```
+
+If that is stable but still lets too much tracking through, replace HaGeZi LIGHT with:
+
+```text
+HaGeZi Multi NORMAL
+https://raw.githubusercontent.com/hagezi/dns-blocklists/main/adblock/normal.txt
+```
+
+Avoid stacking aggressive Pro, Ultimate, gambling, social, annoyance, or cookie lists
+at first. They are more likely to break old browsing than to help the G3.
+
+Recommended DNS settings:
+
+- Protection: on.
+- Blocking mode: `NXDOMAIN`.
+- Blocked response TTL: `3600`.
+- Cache size: `64 MB` or higher.
+- Optimistic cache: on, if available.
+- Minimum TTL: `300`.
+- Maximum TTL: `86400`.
+- Safe Search, parental control, and browsing security: off for the first test round.
+
+Only add custom filtering rules when the query log shows they are still needed:
+
+```text
+||googletagmanager.com^
+||google-analytics.com^
+||doubleclick.net^
+||googlesyndication.com^
+||facebook.net^
+||connect.facebook.net^
+||scorecardresearch.com^
+||hotjar.com^
+||newrelic.com^
+||sentry.io^
+||segment.io^
+```
+
+Do not broadly block shared infrastructure such as `gstatic.com`, Cloudflare, Akamai,
+Fastly, or common JavaScript CDNs. That usually breaks more pages than it speeds up.
+
+Final check: open **Query Log** in AdGuard Home, filter on the G3 IP, and browse with
+Aquafox/Macproxy. If you see little or no traffic from the G3, the browser path is
+probably resolving DNS inside the proxy container instead. In that case AdGuard still
+filters direct G3 traffic, but proxy-side DNS filtering needs a separate decision.
+
+References:
+
+- <https://github.com/AdguardTeam/AdGuardHome/wiki>
+- <https://github.com/AdguardTeam/AdGuardHome/wiki/Configuration>
+- <https://github.com/hagezi/dns-blocklists>
+
 ## Test Matrix
 
 Use this matrix only after Ethernet, DHCP, gateway, and DNS on the iMac G3 are
