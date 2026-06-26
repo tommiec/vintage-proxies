@@ -77,6 +77,24 @@ services:
     networks:
       - proxynet
 
+  browservice:
+    image: ghcr.io/tommiec/browservice:latest
+    container_name: browservice
+    restart: unless-stopped
+    env_file:
+      - .env
+    ports:
+      - "8080:8080"
+    volumes:
+      - browservice_data:/data
+    security_opt:
+      - no-new-privileges:true
+      - seccomp=unconfined
+    labels:
+      - com.centurylinklabs.watchtower.enable=true
+    networks:
+      - proxynet
+
 networks:
   proxynet:
     name: proxynet
@@ -85,3 +103,4 @@ networks:
 volumes:
   adguard_work:
   adguard_conf:
+  browservice_data:

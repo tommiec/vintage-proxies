@@ -7,6 +7,9 @@ Docker Compose stack providing legacy web access for the iMac G3.
 - **WebOne** — fallback when you want more layout/images; richer but slower.
 - **Crypto Ancienne (`carl`)** — only for OS 9/Classilla special cases; no certificate
   validation.
+- **Browservice** — server-side Chromium rendering; streams pages as JPEG frames so the
+  iMac needs no JavaScript, TLS, or CSS support. Use for modern sites that break with
+  the other proxies. Works on both Tiger and OS 9.
 - **AdGuard Home** — standalone DNS blocker; optional for the G3 and independent of the
   browser proxy choice.
 
@@ -27,6 +30,7 @@ Finding on the G3: pages load faster with Macproxy than with WebOne. Hence this 
 | Daily on Tiger/Aquafox | Macproxy | `5003` | Fastest, plain HTML. |
 | More layout/images | WebOne | `8091` | Richer, heavier. |
 | OS 9/Classilla | `carl` | `8767` | No certificate validation; not for Tiger. |
+| Modern sites (Tiger + OS 9) | Browservice | `8080` | Full Chromium server-side; JPEG stream to client. |
 
 ## Ports
 
@@ -35,6 +39,7 @@ Finding on the G3: pages load faster with Macproxy than with WebOne. Hence this 
 | Macproxy | `5003` | `5001` |
 | WebOne   | `8091` | `8080` |
 | carl     | `8767` | `8765` |
+| Browservice | `8080` | `8080` |
 | AdGuard Home DNS   | `5354` (set `53` in `.env` for G3 use) | `53` |
 | AdGuard Home setup | `3080` | `3000` |
 | AdGuard Home admin | `3001` | `80` |
@@ -100,6 +105,41 @@ Safari uses the OS X network settings:
 
 For Safari use the same port choice: Macproxy `5003`, WebOne `8091`. Do not use `carl`
 for Safari/Aquafox.
+
+## Browservice
+
+Browservice runs a full Chromium instance on the server and streams the rendered page
+as JPEG frames over HTTP to the client browser. The iMac sends only mouse/keyboard
+events and receives images — no JavaScript execution, no TLS handshake, no modern CSS
+parsing happens on the G3 side.
+
+Use it when Macproxy or WebOne cannot render a page you actually need. It works with
+both Tiger browsers (Aquafox, Safari) and OS 9/Classilla because the client only needs
+to load images and submit basic form data.
+
+### Browser configuration for Browservice
+
+Browservice is **not** a standard HTTP proxy — point the browser directly at the
+Browservice URL, not at a proxy setting.
+
+On Tiger/Aquafox or Safari: open `http://<NAS-IP>:8080/` in the browser. Browservice
+presents a start page from which you navigate; all rendering happens on the server.
+
+### Updating Browservice
+
+Browservice fetches the latest AppImage from the official GitHub Releases at Docker
+build time. To update:
+
+1. Edit `browservice/Dockerfile` (bump a comment or the base image) and push to `main`.
+2. GitHub Actions rebuilds and publishes `ghcr.io/tommiec/browservice:latest`.
+3. Watchtower pulls the new image and restarts the container.
+
+### Docker notes
+
+Browservice uses Chromium/CEF, which requires either the `SYS_ADMIN` capability or
+`--no-sandbox`. This stack uses `--no-sandbox` combined with
+`seccomp=unconfined` (set in `compose.yaml`). Do not run this proxy on an
+internet-exposed host without additional network-level protection.
 
 ## AdGuard Home DNS on the G3
 
@@ -223,14 +263,8 @@ or another browser without `CONNECT` is concretely up next.
 
 ## Alternatives and Candidates for Later
 
-Not part of the current stack, but documented for later evaluation. None of these is set
-up here yet; the three-proxy stack above stays primary until one is actually tested on
-the G3.
+Not part of the current stack, but documented for later evaluation.
 
-- **Browservice** (<https://github.com/ttalvitie/browservice>) — for modern sites that
-  really need to work interactively. A modern browser runs on a server; the iMac mostly
-  sees a rendering of it streamed as images. Practical, but less authentic than
-  Macproxy/WebOne, and heavier on the network.
 - **retro-proxy** (<https://github.com/DrKylstein/retro-proxy>) — an HTTPS→HTTP
   transcoding proxy in Node.js, with conversion/compression options and an `allowed.txt`
   to skip transcoding per site. Functionally in the same category as Macproxy/WebOne, but

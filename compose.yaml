@@ -91,6 +91,32 @@ services:
     networks:
       - proxynet
 
+  browservice:
+    # Server-side Chromium rendering: streams pages as JPEG frames.
+    # Built from source via ./browservice/Dockerfile (AppImage extract).
+    # For Portainer CE: use ghcr.io/tommiec/browservice:latest.
+    build:
+      context: ./browservice
+    image: ${BROWSERVICE_IMAGE:-browservice:local}
+    container_name: ${BROWSERVICE_CONTAINER_NAME:-browservice}
+    restart: unless-stopped
+    ports:
+      - "${BROWSERVICE_PORT:-8080}:8080"
+    environment:
+      - TZ=${TZ:-Europe/Brussels}
+    volumes:
+      - browservice_data:/data
+    # --no-sandbox requires disabling the seccomp profile, or grant SYS_ADMIN.
+    # seccomp=unconfined is the practical choice for Chromium in Docker.
+    security_opt:
+      - no-new-privileges:true
+      - seccomp=unconfined
+    labels:
+      # Locally built image: Watchtower cannot update this.
+      - com.centurylinklabs.watchtower.enable=false
+    networks:
+      - proxynet
+
 networks:
   proxynet:
     driver: bridge
@@ -98,3 +124,4 @@ networks:
 volumes:
   adguard_work:
   adguard_conf:
+  browservice_data:

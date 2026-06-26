@@ -4,12 +4,13 @@ This folder contains a `compose.yaml` that uses only pre-built images — no loc
 `build:` context. Use it when your deployment tool cannot build images at deploy time
 (Portainer CE, a remote Docker host, any GitOps runner that expects a registry image).
 
-The root [compose.yaml](../compose.yaml) builds `cryanc/carl` from source and is meant
-for local development. Here, `cryanc` is replaced by the image published to GHCR by
-GitHub Actions:
+The root [compose.yaml](../compose.yaml) builds `cryanc/carl` and `browservice` from
+source and is meant for local development. Here, both are replaced by images published
+to GHCR by GitHub Actions:
 
 ```text
 ghcr.io/tommiec/cryanc-carl:latest
+ghcr.io/tommiec/browservice:latest
 ```
 
 ## Files
@@ -49,6 +50,14 @@ set the G3's DNS server to `<NAS-IP>`. See the root
 
 1. Edit `cryanc/Dockerfile` in this repo and push to `main`.
 2. GitHub Actions rebuilds and publishes `ghcr.io/tommiec/cryanc-carl:latest`.
-3. Pull the new image and restart: `docker compose pull cryanc && docker compose up -d cryanc`.
+3. Pull and restart: `docker compose pull cryanc && docker compose up -d cryanc`.
 
-Do not push local `cryanc-carl` builds to GHCR. Let GitHub Actions publish the image.
+## Updating Browservice
+
+Browservice fetches the latest AppImage at Docker build time via the GitHub API.
+
+1. Edit `browservice/Dockerfile` (bump a comment or the base image) and push to `main`.
+2. GitHub Actions rebuilds and publishes `ghcr.io/tommiec/browservice:latest`.
+3. Pull and restart: `docker compose pull browservice && docker compose up -d browservice`.
+
+Do not push local builds to GHCR. Let GitHub Actions publish both images.
