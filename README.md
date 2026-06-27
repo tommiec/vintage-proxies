@@ -42,6 +42,21 @@ Use it as a last resort when Macproxy and WebOne cannot handle a site.
 | OS 9/Classilla | `carl` | `8767` | Set as HTTP proxy; no certificate validation; not for Tiger. |
 | Modern sites (last resort) | Browservice | `8083` | Surf to `http://<NAS-IP>:8083/` and type URL inside. Not validated on the G3 yet. |
 
+## Tested Setup
+
+This stack has been deployed on a Synology DS920+ using Synology Container Manager /
+Docker. Other Linux Docker hosts should work, but may need adjustments for ports,
+capabilities, and persistent volume paths.
+
+The current tested client setup on the iMac G3 is:
+
+| Client | Tested configuration | Status |
+|--------|----------------------|--------|
+| Safari on Mac OS X Tiger | Macproxy configured in the OS X system/network proxy settings | Tested |
+| Aquafox on Mac OS X Tiger | WebOne configured in Aquafox's browser proxy settings | Tested |
+| Safari or Aquafox on Mac OS X Tiger | Browservice opened directly at `http://<NAS-IP>:8083/` | Tested as an option; use Browservice's in-page address bar |
+| OS 9 / Classilla | `carl` as HTTP proxy | Not tested yet |
+
 ## Ports
 
 | Service | Current host port | Internal |
@@ -89,8 +104,9 @@ repository and want to publish your own images, update the image names in
 
 ## Browser Configuration on the iMac
 
-**Macproxy and WebOne** are configured once as the system HTTP proxy. After that, Safari and
-Aquafox use their own address bar as normal — the proxy is invisible.
+**Macproxy and WebOne** are HTTP proxies. You can configure them in the OS or in an
+individual browser. The tested setup uses Macproxy in the OS X system/network proxy
+settings for Safari, and WebOne in Aquafox's own browser proxy settings.
 
 **Browservice** is not configured as a proxy. Open `http://<NAS-IP>:8083/` directly in Safari,
 then use the address bar inside that page. Use it only when Macproxy/WebOne fail on a site.
