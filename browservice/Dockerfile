@@ -23,6 +23,7 @@ RUN apt-get update \
        ca-certificates \
        curl \
        jq \
+       libnss3 \
     && rm -rf /var/lib/apt/lists/*
 
 # Download the latest official x86_64 AppImage, extract in-place, discard archive.
