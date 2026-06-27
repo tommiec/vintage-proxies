@@ -85,11 +85,8 @@ services:
       - .env
     ports:
       - "8083:8080"
-    cap_add:
-      - SYS_ADMIN
     security_opt:
       - seccomp=unconfined
-    entrypoint: ["/bin/sh", "-c", "chmod 4755 /opt/browservice/opt/browservice/chrome-sandbox && exec /opt/browservice/AppRun"]
     labels:
       - com.centurylinklabs.watchtower.enable=true
     networks:
