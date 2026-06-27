@@ -85,6 +85,8 @@ services:
       - .env
     ports:
       - "8083:8080"
+    cap_add:
+      - SYS_ADMIN
     security_opt:
       - seccomp=unconfined
     labels:

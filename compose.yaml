@@ -104,9 +104,13 @@ services:
       - "${BROWSERVICE_PORT:-8083}:8080"
     environment:
       - TZ=${TZ:-Europe/Brussels}
+    # SYS_ADMIN: Chrome's zygote creates PID/network namespaces via clone()/unshare().
+    # On Synology DSM (kernel.unprivileged_userns_clone=0) this requires CAP_SYS_ADMIN.
     # seccomp=unconfined: Docker's default profile blocks some syscalls Chromium needs.
-    # The SUID sandbox (chrome-sandbox, mode 4755 in image) handles process isolation.
+    # The SUID sandbox (chrome-sandbox, mode 4755 in image) handles renderer isolation.
     # Do NOT add no-new-privileges:true — it blocks the chrome-sandbox setuid bit.
+    cap_add:
+      - SYS_ADMIN
     security_opt:
       - seccomp=unconfined
     labels:
