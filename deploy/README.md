@@ -16,6 +16,9 @@ ghcr.io/tommiec/browservice:latest
 These images must be public for unauthenticated pulls. If you fork this repository
 and publish your own images, update the image names in this compose file.
 
+See the root [Update Model](../README.md#update-model) for which components update
+from upstream registries and which ones require a rebuild in this repository.
+
 ## Files
 
 - `compose.yaml` — stack definition using pre-built images only.

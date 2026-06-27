@@ -348,29 +348,50 @@ browser like Classilla that does not use CONNECT.
 - Use `carl` only for OS 9/Classilla; modern browsers must use Macproxy or WebOne.
 - Do not bind these proxies unprotected to the internet; they have no authentication.
   Keep them on your LAN.
-- WebOne and Macproxy can be updated with `docker compose pull && docker compose up -d`.
-- `carl` is published to `ghcr.io/tommiec/cryanc-carl:latest` by GitHub Actions; pull to update.
 
-## Updates
+## Update Model
 
-**WebOne and Macproxy:**
+This repository defines how the stack is built and which images it uses. It does
+not run an updater by itself. In production, a deployment layer such as Watchtower,
+Portainer, a scheduled `docker compose pull`, or another GitOps runner decides when
+to pull newer images and restart containers.
+
+| Component | Image source | Update source | Notes |
+|-----------|--------------|---------------|-------|
+| AdGuard Home | `adguard/adguardhome:latest` | Upstream image registry | App/config data persists in the AdGuard volume. Review release notes before major upgrades. |
+| WebOne | `u306060/webone:latest` | Upstream Docker image | Image packaging follows the WebOne Docker image maintainer; config format can change between versions. |
+| Macproxy Classic | `rdmark/macproxy:latest` | Upstream Docker image | Pull the upstream image to update. |
+| `cryanc/carl` | `ghcr.io/tommiec/cryanc-carl:latest` in deploy mode; local build in root compose | This repository's GitHub Actions | Rebuilt only when `cryanc/**` or its workflow changes. |
+| Browservice | `ghcr.io/tommiec/browservice:latest` in deploy mode; local build in root compose | This repository's GitHub Actions + upstream Browservice AppImage fetched at build time | Rebuilt only when `browservice/**` or its workflow changes. A normal container pull does not fetch a newer AppImage unless this repo has rebuilt the image first. |
+
+With plain Docker Compose, update registry-backed images with:
 
 ```sh
-docker compose pull && docker compose up -d
+docker compose pull
+docker compose up -d
 ```
 
-**`carl`:**
+For the root development compose, `cryanc/carl` and Browservice are local builds. Use
+`docker compose up -d --build` after changing their Dockerfiles.
 
-`carl` has no official image. GitHub Actions builds and publishes
-`ghcr.io/tommiec/cryanc-carl:latest` on every push to `main` that touches `cryanc/**`.
+For the pre-built deploy compose, `cryanc/carl` and Browservice update only after
+GitHub Actions publishes new GHCR images:
 
-To update:
+**`cryanc/carl`:**
 
 1. Edit `cryanc/Dockerfile` (or bump `CRYANC_REF` to pin a specific upstream commit/tag).
 2. Push to `main` — GitHub Actions rebuilds and publishes the image.
 3. Pull the new image and restart: `docker compose pull cryanc && docker compose up -d cryanc`.
 4. Test at least `https://example.com/` and the OS 9/Classilla case `carl` is meant for.
    Confirm working only after a short G3 test, not just because the container starts.
+
+**Browservice:**
+
+1. Edit `browservice/Dockerfile` (or bump a comment/base image to force a rebuild).
+2. Push to `main` — GitHub Actions fetches the current upstream AppImage and publishes
+   `ghcr.io/tommiec/browservice:latest`.
+3. Pull the new image and restart: `docker compose pull browservice && docker compose up -d browservice`.
+4. Test the Browservice start page and at least one simple HTTPS site before calling it healthy.
 
 The `cryanc` container runs as a non-root user, with `no-new-privileges`, without extra
 Linux capabilities, and with a simple TCP healthcheck on the internal `CARL_PORT`.
