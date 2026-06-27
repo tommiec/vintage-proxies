@@ -269,44 +269,6 @@ References:
 - <https://github.com/AdguardTeam/AdGuardHome/wiki/Configuration>
 - <https://github.com/hagezi/dns-blocklists>
 
-## Test Matrix
-
-Use this matrix only after Ethernet, DHCP, gateway, and DNS on the iMac G3 are
-confirmed. For each test, note briefly: `works`, `partial`, `fails`, plus what you saw
-(load time, layout, images, forms, error message).
-
-Network basics: replace `<IMAC-IP>` and `<NAS-IP>` with your actual addresses.
-If the iMac and the proxy host are on different VLANs, ensure your router allows
-cross-VLAN traffic between them.
-
-| Test | Aquafox via Macproxy | Aquafox via WebOne | Safari via Macproxy | Safari via WebOne | OS 9/Classilla via carl | Notes |
-|------|----------------------|--------------------|---------------------|-------------------|-------------------------|----------|
-| Proxy reachable (direct `http://<NAS-IP>:8091/`) | n/a | | n/a | | n/a | "Looped connection" = WebOne is reachable. |
-| `http://example.com/` | | | | | | Plain HTTP basic test. |
-| `https://example.com/` | | | | | | HTTPS/TLS basic test via proxy. |
-| `https://frogfind.com/` | | | | | | Retro-friendly search/start page. |
-| Wikipedia article | | | | | | Check text, links, and images. |
-| Macintosh Garden download page | | | | | | Practical retro software source; no login needed. |
-| Internet Archive item page | | | | | | Heavy page; expect possibly partial. |
-| Modern JS-heavy site | | | | | | Negative control: note where it breaks. |
-| Download a file via browser | | | | | | Test a small download, no large images. |
-
-Recommended first round: test Aquafox via Macproxy, then the same sites via WebOne as a
-fallback. Test Safari only as a system-proxy check. Test `carl` only when OS 9/Classilla
-or another browser without `CONNECT` is concretely up next.
-
-### Browservice test
-
-Open `http://<NAS-IP>:8083/` directly in Safari or Aquafox (no proxy setting needed).
-Type a destination URL in the Browservice address bar and note the result.
-
-| Test | Safari via Browservice | Aquafox via Browservice | Notes |
-|------|------------------------|-------------------------|-------|
-| Browservice start page loads | | | Basic reachability. |
-| `https://example.com/` | | | Simple HTTPS page. |
-| Modern JS-heavy site | | | Main use case for Browservice. |
-| Video page (e.g. YouTube) | | | Expect audio-only or partial at best. |
-
 ## Alternatives and Candidates for Later
 
 Not part of the current stack, but documented for later evaluation.
