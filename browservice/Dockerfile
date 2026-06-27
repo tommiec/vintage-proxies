@@ -10,8 +10,9 @@
 # Docker. The GitHub API is queried at build time so every image build picks
 # up the latest release automatically.
 #
-# Chromium/CEF sandbox requires SYS_ADMIN in Docker; set cap_add: [SYS_ADMIN]
-# in compose.yaml. Do NOT pass --no-sandbox — Browservice rejects it.
+# The Chromium SUID sandbox helper (chrome-sandbox) must be root-owned with
+# mode 4755 — see the RUN step below. cap_add: [SYS_ADMIN] and seccomp=unconfined
+# are also set in compose.yaml to allow the syscalls CEF needs at runtime.
 
 FROM ubuntu:22.04
 
@@ -36,6 +37,11 @@ RUN set -eux; \
     mv /opt/squashfs-root /opt/browservice; \
     rm /opt/browservice.AppImage
 
+# The Chromium SUID sandbox helper must be owned by root with the setuid bit.
+# This is done at build time (as root) before switching to the app user.
+RUN chown root:root /opt/browservice/opt/browservice/chrome-sandbox \
+    && chmod 4755 /opt/browservice/opt/browservice/chrome-sandbox
+
 # Data directory for Browservice session state.
 RUN mkdir -p /data \
     && useradd -r -s /sbin/nologin -d /data browservice \
@@ -49,5 +55,4 @@ USER browservice
 WORKDIR /data
 
 # --vice-opt-http-listen-addr is the current option name (--http-listen-addr is deprecated).
-# SYS_ADMIN capability (set in compose) allows the Chromium sandbox to run normally.
 CMD ["/opt/browservice/AppRun", "--vice-opt-http-listen-addr=0.0.0.0:8080"]
