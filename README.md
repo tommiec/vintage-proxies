@@ -105,15 +105,13 @@ repository and want to publish your own images, update the image names in
 
 ## Browser Configuration on the iMac
 
-**Macproxy and WebOne** are HTTP proxies. You can configure them in the OS or in an
-individual browser. The tested setup uses Macproxy in the OS X system/network proxy
-settings for Safari, and WebOne in Aquafox's own browser proxy settings.
+This section covers **Macproxy and WebOne**, the two HTTP proxies. You can configure them
+in the OS or in an individual browser. The tested setup uses Macproxy in the OS X
+system/network proxy settings for Safari, and WebOne in Aquafox's own browser proxy
+settings. Browservice is not a proxy and is covered separately in [Browservice](#browservice).
 
-**Browservice** is not configured as a proxy. Open `http://<NAS-IP>:8083/` directly in Safari,
-then use the address bar inside that page. Use it only when Macproxy/WebOne fail on a site.
-
-For Macproxy and WebOne: do not browse to the proxy URL itself. WebOne will show a "looped
-connection" page if you do — that just means it is reachable.
+Do not browse to the proxy URL itself. WebOne will show a "looped connection" page if you
+do — that just means it is reachable.
 
 Replace `<NAS-IP>` in the steps below with the IP address or hostname of the machine
 running this stack (e.g. `192.168.1.10`).
