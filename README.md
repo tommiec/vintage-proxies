@@ -402,3 +402,7 @@ contributors:
 The MIT license in this repository applies to this wrapper's compose files,
 Dockerfiles, and documentation. It does not relicense upstream software or container
 images.
+
+## AI usage
+
+AI was used as a sounding board for Docker, Compose and troubleshooting decisions. The architecture, implementation, validation and maintenance are mine.
