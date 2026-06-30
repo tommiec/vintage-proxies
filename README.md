@@ -192,6 +192,15 @@ browser sessions, cache, or installed fonts across container replacement. Do not
 run this proxy on an internet-exposed host without additional network-level
 protection.
 
+GPU hardware acceleration is deliberately disabled (`--disable-gpu`,
+`--disable-features=Vulkan`). The DS920+ has an Intel UHD 600 that could be
+passed through via `devices: [/dev/dri:/dev/dri]`, but the J4125 CPU handles
+software rendering fine for a single-user proxy, and sharing the GPU with DSM's
+own transcoding services (Plex, Video Station) introduces contention. If
+rendering becomes a bottleneck with heavier use, GPU passthrough is a viable
+next step: add the device, set the correct `video` group GID in the Dockerfile,
+and remove the disable flags.
+
 ## AdGuard Home DNS on the G3
 
 AdGuard Home is included as a standalone DNS service. It is not wired into the proxy
