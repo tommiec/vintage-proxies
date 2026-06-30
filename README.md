@@ -11,9 +11,9 @@ Docker Compose stack providing legacy web access for the iMac G3.
 - **[Crypto Ancienne (`carl`)](https://github.com/classilla/cryanc)** — only for OS 9/Classilla special cases; no certificate
   validation.
 - **[Browservice](https://github.com/ttalvitie/browservice)** — server-side Chromium rendering; streams pages as JPEG frames so the
-  iMac needs no JavaScript, TLS, or CSS support. Treat it as a candidate for modern
-  sites that break with the other proxies; Tiger and OS 9/Classilla still need
-  validation on the G3, and PowerPC/m68k support is not tested upstream.
+  iMac needs no JavaScript, TLS, or CSS support. Validated on Tiger (G3). Use it for
+  modern sites that break with the other proxies. OS 9/Classilla not yet tested;
+  PowerPC/m68k support is not tested upstream.
 - **[AdGuard Home](https://github.com/AdguardTeam/AdGuardHome)** — standalone DNS blocker; optional for the G3 and independent of the
   browser proxy choice.
 
@@ -160,10 +160,8 @@ as JPEG frames over HTTP to the client browser. The iMac sends only mouse/keyboa
 events and receives images — no JavaScript execution, no TLS handshake, no modern CSS
 parsing happens on the G3 side.
 
-Use it when Macproxy or WebOne cannot render a page you actually need. It is a
-candidate for Tiger browsers (Aquafox, Safari) and OS 9/Classilla because the client
-only needs to load images and submit basic form data, but it still needs validation
-on the G3.
+Use it when Macproxy or WebOne cannot render a page you actually need. Validated on
+Tiger (G3, Safari/Aquafox). OS 9/Classilla not yet tested.
 
 ### Browser configuration for Browservice
 
