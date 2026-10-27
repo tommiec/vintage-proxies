@@ -9,9 +9,6 @@ Docker Compose stack providing legacy web access for the iMac G3.
 - **[WebOne](https://github.com/atauenis/webone)** — fallback when you want more layout/images; richer but slower.
 - **[Crypto Ancienne (`carl`)](https://github.com/classilla/cryanc)** — only for OS 9/Classilla special cases; no certificate
   validation.
-- **[AdGuard Home](https://github.com/AdguardTeam/AdGuardHome)** — standalone DNS blocker; optional for the G3 and independent of the
-  browser proxy choice.
-
 No sensitive logins or banking through this machine. Macproxy/WebOne validate upstream
 certificates, but between the iMac and the NAS the traffic is local proxy traffic. `carl`
 is opportunistic compatibility, not a secure TLS solution.
@@ -36,7 +33,6 @@ browser at it:
 | Daily browsing (Safari) | Macproxy | `5003` | HTTP proxy in the OS X network settings |
 | More layout/images (Aquafox) | WebOne | `8091` | HTTP proxy in Aquafox's own settings |
 | OS 9 / Classilla | `carl` | `8767` | HTTP proxy; no certificate validation; not for Tiger |
-| DNS-wide ad/tracker filtering | AdGuard Home | — | Set as the DNS server in the network settings |
 
 Current deployment target: Synology DS920+ running Docker / Portainer. Other Linux
 Docker hosts should work, but may need adjustments for ports, capabilities, and
@@ -49,11 +45,15 @@ persistent volume paths.
 | Macproxy | `5003` | `5001` |
 | WebOne   | `8091` | `8080` |
 | carl     | `8767` | `8765` |
-| AdGuard Home DNS   | `5354` (set `53` in `.env` for G3 use) | `53` |
-| AdGuard Home setup | `3080` | `3000` |
-| AdGuard Home admin | `3001` | `80` |
 
 Host ports are configurable via `.env`.
+
+## DNS
+
+Use the network gateway/resolver supplied by DHCP. Browser proxy selection is
+independent of DNS. DNS for requests fetched by a proxy is normally resolved
+on the proxy host; check host/container resolvers separately. AdGuard retirement
+requires migrating existing clients before deploying the revised stack.
 
 ## Requirements
 
@@ -71,7 +71,6 @@ Host ports are configurable via `.env`.
    `carl` is compiled from source on first start; allow a few minutes
    for the build.
 3. Configure the browser's proxy to the host IP and the relevant port (see [Ports](#ports)).
-4. Optional: use [AdGuard Home DNS](#adguard-home-dns-on-the-g3) for G3-wide DNS blocking.
 
 ## Portainer CE
 
@@ -136,100 +135,6 @@ Safari uses the OS X network settings:
 For Safari use the same port choice: Macproxy `5003`, WebOne `8091`. Do not use `carl`
 for Safari/Aquafox.
 
-## AdGuard Home DNS on the G3
-
-AdGuard Home is included as a standalone DNS service. It is not wired into the proxy
-containers: proxy choice stays in the browser, DNS choice stays in OS X Network settings.
-
-To use it from the G3:
-
-1. Set `ADGUARD_DNS_PORT=53` in `.env` before starting the stack. Standard DNS clients
-   use port `53`; the default `5354` is only a collision-safe startup value.
-2. Start the stack and finish the setup wizard at `http://<NAS-IP>:3080/`.
-3. In the wizard, keep DNS listening on internal port `53`. Use internal port `80` for
-   the admin UI if you want to reach it at `http://<NAS-IP>:3001/` after setup.
-4. On Tiger: System Preferences → Network → active interface → **DNS** tab. Add
-   `<NAS-IP>` as the DNS server.
-
-This filters DNS for all G3 traffic. It does not change which proxy the browser uses.
-
-### Post-install: Retro Light filtering
-
-Treat AdGuard Home as a light DNS filter for the G3, not as an aggressive adblock
-setup. The goal is fewer tracker, ad, metrics, and pixel requests while keeping old
-sites usable.
-
-In the setup wizard:
-
-- Keep DNS listening on internal port `53`.
-- Keep the admin UI on internal port `80` so it remains reachable at
-  `http://<NAS-IP>:3001/`.
-- Use your normal LAN resolver or router as upstream DNS. For a NAS in a server VLAN
-  behind a router or firewall, this is usually the gateway or resolver for that
-  server network.
-- Use plain DNS upstreams first. DoH/DoT is not needed for this use case.
-
-In **Filters -> DNS blocklists**, start small:
-
-```text
-AdGuard DNS filter
-https://adguardteam.github.io/HostlistsRegistry/assets/filter_1.txt
-
-HaGeZi Multi LIGHT
-https://raw.githubusercontent.com/hagezi/dns-blocklists/main/adblock/light.txt
-```
-
-If that is stable but still lets too much tracking through, replace HaGeZi LIGHT with:
-
-```text
-HaGeZi Multi NORMAL
-https://raw.githubusercontent.com/hagezi/dns-blocklists/main/adblock/normal.txt
-```
-
-Avoid stacking aggressive Pro, Ultimate, gambling, social, annoyance, or cookie lists
-at first. They are more likely to break old browsing than to help the G3.
-
-Recommended DNS settings:
-
-- Protection: on.
-- Blocking mode: `NXDOMAIN`.
-- Blocked response TTL: `3600`.
-- Cache size: `64 MB` or higher.
-- Optimistic cache: on, if available.
-- Minimum TTL: `300`.
-- Maximum TTL: `86400`.
-- Safe Search, parental control, and browsing security: off for the first test round.
-
-Only add custom filtering rules when the query log shows they are still needed:
-
-```text
-||googletagmanager.com^
-||google-analytics.com^
-||doubleclick.net^
-||googlesyndication.com^
-||facebook.net^
-||connect.facebook.net^
-||scorecardresearch.com^
-||hotjar.com^
-||newrelic.com^
-||sentry.io^
-||segment.io^
-```
-
-Do not broadly block shared infrastructure such as `gstatic.com`, Cloudflare, Akamai,
-Fastly, or common JavaScript CDNs. That usually breaks more pages than it speeds up.
-
-Final check: open **Query Log** in AdGuard Home, filter on the G3 IP, and browse with
-Aquafox/Macproxy. If you see little or no traffic from the G3, the browser path is
-probably resolving DNS inside the proxy container instead. In that case AdGuard still
-filters direct G3 traffic, but proxy-side DNS filtering needs a separate decision.
-
-References:
-
-- <https://github.com/AdguardTeam/AdGuardHome/wiki>
-- <https://github.com/AdguardTeam/AdGuardHome/wiki/Configuration>
-- <https://github.com/hagezi/dns-blocklists>
-
 ## Alternatives and Candidates for Later
 
 Not part of the current stack, but documented for later evaluation.
@@ -287,7 +192,6 @@ to pull newer images and restart containers.
 
 | Component | Image source | Update source | Notes |
 |-----------|--------------|---------------|-------|
-| AdGuard Home | `adguard/adguardhome:latest` | Upstream image registry | App/config data persists in the AdGuard volume. Review release notes before major upgrades. |
 | WebOne | `u306060/webone:latest` | Upstream Docker image | Image packaging follows the WebOne Docker image maintainer; config format can change between versions. |
 | Macproxy Classic | `rdmark/macproxy:latest` | Upstream Docker image | Pull the upstream image to update. |
 | `cryanc/carl` | `ghcr.io/tommiec/cryanc-carl:latest` in deploy mode; local build in root compose | This repository's GitHub Actions | Rebuilt only when `cryanc/**` or its workflow changes. |
@@ -328,7 +232,6 @@ contributors:
 | WebOne | WebOne Development Team | <https://github.com/atauenis/webone> | WebOne custom permissive license; notify users about traffic changes/security implications |
 | WebOne Docker image | u306060 / way5 | `u306060/webone`, <https://github.com/way5/docker-webone> | Docker image packaging for WebOne |
 | Crypto Ancienne (`carl`) | Cameron Kaiser | <https://github.com/classilla/cryanc> | Upstream repository does not publish standard license metadata; review upstream terms before redistributing modified builds |
-| AdGuard Home | AdGuard Team | <https://github.com/AdguardTeam/AdGuardHome> | GPL-3.0 |
 | HaGeZi DNS blocklists | hagezi | <https://github.com/hagezi/dns-blocklists> | GPL-3.0 |
 
 The MIT license in this repository applies to this wrapper's compose files,

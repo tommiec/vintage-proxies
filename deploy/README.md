@@ -23,16 +23,11 @@ from upstream registries and which ones require a rebuild in this repository.
 - `compose.yaml` — stack definition using pre-built images only.
 - `.env.example` — template for the `.env` file; copy and fill in `PROXY_HOSTNAME`.
 
-This generic deploy compose uses Docker named volumes for AdGuard Home data:
+## DNS migration before deployment
 
-```yaml
-adguard_work:
-adguard_conf:
-```
-
-That keeps this repository portable. A NAS-specific GitOps repository may
-replace those named volumes with host bind mounts if it wants all runtime data
-under one backup/cleanup root.
+This stack no longer supplies DNS. Move any former NAS-DNS clients to their
+network resolver and test them before deploying. Preserve old DNS data until
+the migration is verified; do not remove shared networks or other services.
 
 ## Setup
 
@@ -45,11 +40,6 @@ under one backup/cleanup root.
      a secret or side-loaded file.
 3. Configure the browser's proxy to `<NAS-IP>` and the relevant port (see the root
    [README](../README.md#ports)).
-
-Optional: to use the included AdGuard Home service as DNS on the G3, set
-`ADGUARD_DNS_PORT=53`, complete the setup wizard at `http://<NAS-IP>:3080/`, then
-set the G3's DNS server to `<NAS-IP>`. See the root
-[README](../README.md#adguard-home-dns-on-the-g3).
 
 ## Updating cryanc
 
