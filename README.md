@@ -1,7 +1,6 @@
 # Proxy Stack for the iMac G3
 
 [![Build cryanc](https://github.com/tommiec/vintage-proxies/actions/workflows/build-cryanc.yml/badge.svg)](https://github.com/tommiec/vintage-proxies/actions/workflows/build-cryanc.yml)
-[![Build browservice](https://github.com/tommiec/vintage-proxies/actions/workflows/build-browservice.yml/badge.svg)](https://github.com/tommiec/vintage-proxies/actions/workflows/build-browservice.yml)
 
 Docker Compose stack providing legacy web access for the iMac G3.
 
@@ -10,10 +9,6 @@ Docker Compose stack providing legacy web access for the iMac G3.
 - **[WebOne](https://github.com/atauenis/webone)** — fallback when you want more layout/images; richer but slower.
 - **[Crypto Ancienne (`carl`)](https://github.com/classilla/cryanc)** — only for OS 9/Classilla special cases; no certificate
   validation.
-- **[Browservice](https://github.com/ttalvitie/browservice)** — server-side Chromium rendering; streams pages as JPEG frames so the
-  iMac needs no JavaScript, TLS, or CSS support. Validated on Tiger (G3). Use it for
-  modern sites that break with the other proxies. OS 9/Classilla not yet tested;
-  PowerPC/m68k support is not tested upstream.
 - **[AdGuard Home](https://github.com/AdguardTeam/AdGuardHome)** — standalone DNS blocker; optional for the G3 and independent of the
   browser proxy choice.
 
@@ -33,11 +28,6 @@ Finding on the G3: pages load faster with Macproxy than with WebOne. Hence this 
 proxy settings and then browse normally with the browser's own address bar. The proxy works
 invisibly in the background.
 
-**Browservice is different** — do not configure it as a proxy. Instead, surf directly to
-`http://<NAS-IP>:8083/` and type the destination URL inside the Browservice interface. You are
-then looking at a live Chromium browser running on the server, streamed as images to the iMac.
-Use it as a last resort when Macproxy and WebOne cannot handle a site.
-
 The table below combines the recommended use, the port, and how to point the
 browser at it:
 
@@ -45,17 +35,12 @@ browser at it:
 | --- | --- | --- | --- |
 | Daily browsing (Safari) | Macproxy | `5003` | HTTP proxy in the OS X network settings |
 | More layout/images (Aquafox) | WebOne | `8091` | HTTP proxy in Aquafox's own settings |
-| Modern sites, last resort | Browservice | `8083` | Open `http://<NAS-IP>:8083/` directly; use its in-page address bar |
 | OS 9 / Classilla | `carl` | `8767` | HTTP proxy; no certificate validation; not for Tiger |
 | DNS-wide ad/tracker filtering | AdGuard Home | — | Set as the DNS server in the network settings |
 
 Current deployment target: Synology DS920+ running Docker / Portainer. Other Linux
 Docker hosts should work, but may need adjustments for ports, capabilities, and
 persistent volume paths.
-
-**Platform requirement: x86_64 only.** The Browservice AppImage is x86_64-only and will
-not run on ARM-based NAS devices (DS220j, DS420j, …) or Apple Silicon. All other services
-(Macproxy, WebOne, carl, AdGuard Home) are multi-arch and run on ARM without changes.
 
 ## Ports
 
@@ -64,7 +49,6 @@ not run on ARM-based NAS devices (DS220j, DS420j, …) or Apple Silicon. All oth
 | Macproxy | `5003` | `5001` |
 | WebOne   | `8091` | `8080` |
 | carl     | `8767` | `8765` |
-| Browservice | `8083` | `8080` |
 | AdGuard Home DNS   | `5354` (set `53` in `.env` for G3 use) | `53` |
 | AdGuard Home setup | `3080` | `3000` |
 | AdGuard Home admin | `3001` | `80` |
@@ -74,8 +58,7 @@ Host ports are configurable via `.env`.
 ## Requirements
 
 - **Docker with Compose v2** — use `docker compose` (plugin), not the legacy `docker-compose` wrapper.
-- **Linux x86_64 host** — Browservice fetches an x86_64 AppImage at build time and will not run on ARM.
-  Other services have no architecture restriction.
+- **Linux Docker host** with images compatible with its CPU architecture.
 
 ## Usage
 
@@ -85,20 +68,18 @@ Host ports are configurable via `.env`.
    ```sh
    docker compose up -d --build
    ```
-   `carl` and `browservice` are compiled from source on first start; allow a few minutes
+   `carl` is compiled from source on first start; allow a few minutes
    for the build.
 3. Configure the browser's proxy to the host IP and the relevant port (see [Ports](#ports)).
-   Browservice is not a proxy — open `http://<NAS-IP>:8083/` directly in the browser instead.
 4. Optional: use [AdGuard Home DNS](#adguard-home-dns-on-the-g3) for G3-wide DNS blocking.
 
 ## Portainer CE
 
-Portainer CE cannot use the local `build:` flow for `cryanc/carl` or `browservice`,
+Portainer CE cannot use the local `build:` flow for `cryanc/carl`,
 so the Portainer stack uses the GitHub Actions images instead:
 
 ```text
 ghcr.io/tommiec/cryanc-carl:latest
-ghcr.io/tommiec/browservice:latest
 ```
 
 See [deploy/](deploy/) for a portable pre-built-images stack and `.env` template.
@@ -111,17 +92,16 @@ journal lives with that NAS GitOps stack.
 
 To publish your own images after forking:
 
-1. Push any change to `cryanc/` or `browservice/` — GitHub Actions builds and publishes
-   `ghcr.io/<your-username>/cryanc-carl:latest` and `ghcr.io/<your-username>/browservice:latest`.
+1. Push a change to `cryanc/` - GitHub Actions builds and publishes
+   `ghcr.io/<your-username>/cryanc-carl:latest`.
 2. Go to **your GitHub profile → Packages**, open each package, and set it to **Public**.
    GHCR packages default to private; the NAS cannot pull them without authentication.
-3. Update the two image names in `deploy/compose.yaml` to match your username.
+3. Update the cryanc image name in `deploy/compose.yaml` to match your username.
 
 ## Browser Configuration on the iMac
 
 This section gives the step-by-step proxy settings for **Macproxy and WebOne**; see
-[Choice](#choice) for which service to use when. Browservice is not a proxy and is covered
-separately in [Browservice](#browservice).
+[Choice](#choice) for which service to use when.
 
 Do not browse to the proxy URL itself. WebOne will show a "looped connection" page if you
 do — that just means it is reachable.
@@ -155,54 +135,6 @@ Safari uses the OS X network settings:
 
 For Safari use the same port choice: Macproxy `5003`, WebOne `8091`. Do not use `carl`
 for Safari/Aquafox.
-
-## Browservice
-
-Browservice runs a full Chromium instance on the server and streams the rendered page
-as JPEG frames over HTTP to the client browser. The iMac sends only mouse/keyboard
-events and receives images — no JavaScript execution, no TLS handshake, no modern CSS
-parsing happens on the G3 side.
-
-Use it when Macproxy or WebOne cannot render a page you actually need. Validated on
-Tiger (G3, Safari/Aquafox). OS 9/Classilla not yet tested.
-
-### Browser configuration for Browservice
-
-Do **not** add Browservice to the proxy settings. Open `http://<NAS-IP>:8083/` directly
-in Safari or Aquafox as a regular URL. Browservice presents its own start page with an
-address bar; type the destination URL there. All rendering happens on the server — Safari
-only receives images and sends back mouse/keyboard events.
-
-### Updating Browservice
-
-Browservice fetches the latest AppImage from the official GitHub Releases at Docker
-build time. To update:
-
-1. Edit `browservice/Dockerfile` (bump a comment or the base image) and push to `main`.
-2. GitHub Actions rebuilds and publishes `ghcr.io/tommiec/browservice:latest`.
-3. Watchtower pulls the new image and restarts the container.
-
-### Docker notes
-
-Browservice uses Chromium/CEF. The `chrome-sandbox` binary is set to root-owned mode
-`4755` in the Dockerfile so the SUID sandbox can run as the non-root `browservice`
-user. The compose file grants `SYS_ADMIN` and sets `seccomp=unconfined` because
-Synology DSM disables unprivileged user namespaces and Docker's default seccomp
-profile blocks some Chromium syscalls. Do not add `no-new-privileges:true` to
-Browservice; it blocks the setuid bit. Browservice keeps its runtime home inside
-the container; no host bind mount is needed unless we later decide to preserve
-browser sessions, cache, or installed fonts across container replacement. Do not
-run this proxy on an internet-exposed host without additional network-level
-protection.
-
-GPU hardware acceleration is deliberately disabled (`--disable-gpu`,
-`--disable-features=Vulkan`). The DS920+ has an Intel UHD 600 that could be
-passed through via `devices: [/dev/dri:/dev/dri]`, but the J4125 CPU handles
-software rendering fine for a single-user proxy, and sharing the GPU with DSM's
-own transcoding services (Plex, Video Station) introduces contention. If
-rendering becomes a bottleneck with heavier use, GPU passthrough is a viable
-next step: add the device, set the correct `video` group GID in the Dockerfile,
-and remove the disable flags.
 
 ## AdGuard Home DNS on the G3
 
@@ -359,7 +291,6 @@ to pull newer images and restart containers.
 | WebOne | `u306060/webone:latest` | Upstream Docker image | Image packaging follows the WebOne Docker image maintainer; config format can change between versions. |
 | Macproxy Classic | `rdmark/macproxy:latest` | Upstream Docker image | Pull the upstream image to update. |
 | `cryanc/carl` | `ghcr.io/tommiec/cryanc-carl:latest` in deploy mode; local build in root compose | This repository's GitHub Actions | Rebuilt only when `cryanc/**` or its workflow changes. |
-| Browservice | `ghcr.io/tommiec/browservice:latest` in deploy mode; local build in root compose | This repository's GitHub Actions + upstream Browservice AppImage fetched at build time | Rebuilt only when `browservice/**` or its workflow changes. A normal container pull does not fetch a newer AppImage unless this repo has rebuilt the image first. |
 
 With plain Docker Compose, update registry-backed images with:
 
@@ -368,10 +299,10 @@ docker compose pull
 docker compose up -d
 ```
 
-For the root development compose, `cryanc/carl` and Browservice are local builds. Use
+For the root development compose, `cryanc/carl` is a local build. Use
 `docker compose up -d --build` after changing their Dockerfiles.
 
-For the pre-built deploy compose, `cryanc/carl` and Browservice update only after
+For the pre-built deploy compose, `cryanc/carl` updates only after
 GitHub Actions publishes new GHCR images:
 
 **`cryanc/carl`:**
@@ -381,14 +312,6 @@ GitHub Actions publishes new GHCR images:
 3. Pull the new image and restart: `docker compose pull cryanc && docker compose up -d cryanc`.
 4. Test at least `https://example.com/` and the OS 9/Classilla case `carl` is meant for.
    Confirm working only after a short G3 test, not just because the container starts.
-
-**Browservice:**
-
-1. Edit `browservice/Dockerfile` (or bump a comment/base image to force a rebuild).
-2. Push to `main` — GitHub Actions fetches the current upstream AppImage and publishes
-   `ghcr.io/tommiec/browservice:latest`.
-3. Pull the new image and restart: `docker compose pull browservice && docker compose up -d browservice`.
-4. Test the Browservice start page and at least one simple HTTPS site before calling it healthy.
 
 The `cryanc` container runs as a non-root user, with `no-new-privileges`, without extra
 Linux capabilities, and with a simple TCP healthcheck on the internal `CARL_PORT`.
@@ -405,7 +328,6 @@ contributors:
 | WebOne | WebOne Development Team | <https://github.com/atauenis/webone> | WebOne custom permissive license; notify users about traffic changes/security implications |
 | WebOne Docker image | u306060 / way5 | `u306060/webone`, <https://github.com/way5/docker-webone> | Docker image packaging for WebOne |
 | Crypto Ancienne (`carl`) | Cameron Kaiser | <https://github.com/classilla/cryanc> | Upstream repository does not publish standard license metadata; review upstream terms before redistributing modified builds |
-| Browservice | Topi Talvitie | <https://github.com/ttalvitie/browservice> | MIT |
 | AdGuard Home | AdGuard Team | <https://github.com/AdguardTeam/AdGuardHome> | GPL-3.0 |
 | HaGeZi DNS blocklists | hagezi | <https://github.com/hagezi/dns-blocklists> | GPL-3.0 |
 

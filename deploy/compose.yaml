@@ -77,22 +77,6 @@ services:
     networks:
       - proxynet
 
-  browservice:
-    image: ghcr.io/tommiec/browservice:latest
-    container_name: browservice
-    restart: unless-stopped
-    env_file:
-      - .env
-    ports:
-      - "${BROWSERVICE_PORT:-8083}:8080"
-    cap_add:
-      - SYS_ADMIN
-    security_opt:
-      - seccomp=unconfined
-    labels:
-      - com.centurylinklabs.watchtower.enable=true
-    networks:
-      - proxynet
 
 networks:
   proxynet:
